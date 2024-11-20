@@ -1,30 +1,34 @@
-import fs from "fs";
+// This file is responsible for handling the API requests for the todos route.
 import { NextResponse } from "next/server";
-import path from "path";
 
-const filePath = path.resolve("src", "todos.json");
-console.log(filePath);
+const prisma = require("../../../../lib/prisma");
 
-const readTodos = () => {
-  const data = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(data);
-};
+async function readTodos() {
+  const todos = await prisma.todo.findMany();
+  return todos;
+}
 
-const writeTodos = (todos) => {
-  fs.writeFileSync(filePath, JSON.stringify(todos, null, 2), "utf-8");
-};
+async function writeTodos(todos) {
+  await prisma.todo.create({
+    data: {
+      title: todos.title,
+    },
+  });
+}
+// TODO: Implement the deleteTodos
+async function deleteTodos(id) {}
 
-export function GET(req) {
-  const todos = readTodos();
+// TODO: Implement the updateTodos
+async function updateTodos(id, todos) {}
+
+export async function GET(req) {
+  const todos = await readTodos();
   return NextResponse.json(todos);
 }
 export async function POST(request) {
-  const a = await request.json();
-  const { title } = a;
-  console.log(title);
-  const todos = readTodos();
-  const newTodo = { id: Date.now(), title };
-  todos.push(newTodo);
-  writeTodos(todos);
+  const requestBody = await request.json();
+  const { title } = requestBody;
+  const newTodo = { title };
+  await writeTodos(newTodo);
   return NextResponse.json(newTodo);
 }
